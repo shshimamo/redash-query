@@ -1,1 +1,1 @@
-SELECT * FROM test_table WHERE value > 10000
+SELECT * FROM test_table WHERE value > 1
