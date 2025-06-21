@@ -5,7 +5,6 @@ on:
     branches:
       - main
   pull_request: # for test
-  workflow_dispatch: # for test
 
 jobs:
   update-redash:
@@ -23,7 +22,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NUMBERS=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path' | grep -E '^dashboards/.*/query_[0-9]+\.sql$' | grep -oP '(?<=query_)[0-9]+(?=\.sql)' | paste -sd ",")
-          echo NUMBERS${NUMBERS}
+          echo NUMBERS:${NUMBERS}
           echo "QUERY_NUMBERS=$NUMBERS" >> $GITHUB_ENV
 
       - name: Update Redash Queries
@@ -34,7 +33,7 @@ jobs:
           IFS=',' read -ra QUERY_NUMBERS_ARRAY <<< "$QUERY_NUMBERS"
           for QUERY_NUMBER in "${QUERY_NUMBERS_ARRAY[@]}"; do
             echo "Updating query number: $QUERY_NUMBER"
-            QUERY_CONTENT=$(cat dashboards/*/query_"$QUERY_NUMBER".sql)
+            QUERY_CONTENT=$(sed '/--/d' dashboards/*/query_"$QUERY_NUMBER".sql)
             curl -X POST \
               -H "Content-Type: application/json" \
               -d '{
