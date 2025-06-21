@@ -1,0 +1,37 @@
+name: Update Redash Queries
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-redash:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract changed SQL files from PR
+        id: extract_sql_files
+        run: |
+          NUMBERS=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path' | grep -E '^dashboards/.*/query_[0-9]+\.sql$' | grep -oP '(?<=query_)[0-9]+(?=\.sql)' | paste -sd ",")
+          echo "QUERY_NUMBERS=$NUMBERS" >> $GITHUB_ENV
+
+      - name: Update Redash Queries
+        env:
+          REDASH_API_KEY: ${{ secrets.REDASH_API_KEY }}
+          REDASH_HOST: ${{ secrets.REDASH_HOST }}
+        run: |
+          IFS=',' read -ra QUERY_NUMBERS_ARRAY <<< "$QUERY_NUMBERS"
+          for QUERY_NUMBER in "${QUERY_NUMBERS_ARRAY[@]}"; do
+            QUERY_CONTENT=$(cat dashboards/*/query_"$QUERY_NUMBER".sql)
+            curl -X POST \
+              -H "Content-Type: application/json" \
+              -d '{
+                "query": "'"$QUERY_CONTENT"'"
+              }' \
+              http://${REDASH_HOST}/api/queries/"$QUERY_NUMBER"?api_key=${REDASH_API_KEY}
+          done
