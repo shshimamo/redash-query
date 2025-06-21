@@ -21,6 +21,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NUMBERS=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path' | grep -E '^dashboards/.*/query_[0-9]+\.sql$' | grep -oP '(?<=query_)[0-9]+(?=\.sql)' | paste -sd ",")
+          echo NUMBERS${NUMBERS}
           echo "QUERY_NUMBERS=$NUMBERS" >> $GITHUB_ENV
 
       - name: Update Redash Queries
