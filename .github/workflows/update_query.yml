@@ -33,11 +33,12 @@ jobs:
         run: |
           IFS=',' read -ra QUERY_NUMBERS_ARRAY <<< "$QUERY_NUMBERS"
           for QUERY_NUMBER in "${QUERY_NUMBERS_ARRAY[@]}"; do
+            echo "Updating query number: $QUERY_NUMBER"
             QUERY_CONTENT=$(cat dashboards/*/query_"$QUERY_NUMBER".sql)
             curl -X POST \
               -H "Content-Type: application/json" \
               -d '{
                 "query": "'"$QUERY_CONTENT"'"
               }' \
-              http://${REDASH_HOST}/api/queries/"$QUERY_NUMBER"?api_key=${REDASH_API_KEY}
+              ${REDASH_HOST}/api/queries/"$QUERY_NUMBER"?api_key=${REDASH_API_KEY}
           done
