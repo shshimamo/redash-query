@@ -34,10 +34,14 @@ jobs:
           for QUERY_NUMBER in "${QUERY_NUMBERS_ARRAY[@]}"; do
             echo "Updating query number: $QUERY_NUMBER"
             QUERY_CONTENT=$(sed '/--/d' dashboards/*/query_"$QUERY_NUMBER".sql)
-            curl -X POST \
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               -H "Content-Type: application/json" \
               -d '{
                 "query": "'"$QUERY_CONTENT"'"
               }' \
-              ${REDASH_HOST}/api/queries/"$QUERY_NUMBER"?api_key=${REDASH_API_KEY}
+              ${REDASH_HOST}/api/queries/"$QUERY_NUMBER"?api_key=${REDASH_API_KEY})
+            if [ "$RESPONSE" -ne 200 ]; then
+              echo "Failed to update query number: $QUERY_NUMBER. HTTP response code: $RESPONSE"
+              exit 1
+            fi
           done
