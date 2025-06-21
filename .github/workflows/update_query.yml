@@ -17,6 +17,8 @@ jobs:
 
       - name: Extract changed SQL files from PR
         id: extract_sql_files
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           NUMBERS=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path' | grep -E '^dashboards/.*/query_[0-9]+\.sql$' | grep -oP '(?<=query_)[0-9]+(?=\.sql)' | paste -sd ",")
           echo "QUERY_NUMBERS=$NUMBERS" >> $GITHUB_ENV
